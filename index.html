@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MINEROSO 3D - El Guardián del Bosque</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: linear-gradient(135deg, #0a1a0a 0%, #1a3a1a 50%, #0a2a0a 100%);
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 10px;
+    overflow-x: hidden;
+  }
+  
+  h1 {
+    color: #ffd700;
+    text-shadow: 3px 3px 6px #000, 0 0 20px #ffd700;
+    margin: 10px 0;
+    font-size: 1.8em;
+    text-align: center;
+    z-index: 100;
+  }
+  
+  #gameContainer {
+    position: relative;
+    border: 5px solid #8b4513;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    width: 800px;
+    max-width: 95vw;
+    height: 500px;
+    max-height: 70vh;
+  }
+  
+  canvas {
+    display: block;
+    border-radius: 10px;
+    width: 100%;
+    height: 100%;
+  }
+  
+  #hud {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    background: linear-gradient(180deg, #2d4a2d 0%, #1a3a1a 100%);
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 3px solid #ffd700;
+    width: 800px;
+    max-width: 95vw;
+    z-index: 100;
+  }
+  
+  .hud-item {
+    background: rgba(0,0,0,0.4);
+    padding: 5px 8px;
+    border-radius: 8px;
+    text-align: center;
+    border: 2px solid #4a7c4a;
+    font-size: 0.75em;
+  }
+  
+  .hud-label {
+    font-size: 0.8em;
+    color: #90EE90;
+    display: block;
+  }
+  
+  .hud-value {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #ffd700;
+  }
+  
+  #modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background: linear-gradient(135deg, #2d4a2d 0%, #1a3a1a 100%);
+    padding: 30px;
+    border-radius: 20px;
+    border: 4px solid #ffd700;
+    max-width: 700px;
+    width: 90%;
+    text-align: center;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  
+  .modal-title {
+    color: #ffd700;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+  }
+  
+  .question {
+    font-size: 1.2em;
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    border-left: 5px solid #ffd700;
+    text-align: left;
+  }
+  
+  .answers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0;
+  }
+  
+  .answer-btn {
+    padding: 12px 15px;
+    font-size: 1em;
+    background: linear-gradient(180deg, #4a7c4a 0%, #2d5a2d 100%);
+    color: #fff;
+    border: 3px solid #8b4513;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: bold;
+  }
+  
+  .answer-btn:hover {
+    background: linear-gradient(180deg, #5a8c5a 0%, #3d6a3d 100%);
+    transform: translateX(10px);
+    border-color: #ffd700;
+  }
+  
+  button {
+    padding: 10px 25px;
+    font-size: 1em;
+    background: linear-gradient(180deg, #ffd700 0%, #ff8c00 100%);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 10px;
+    transition: all 0.3s;
+  }
+  
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+  }
+  
+  button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  #mensaje {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 3px 3px 6px #000;
+    pointer-events: none;
+    z-index: 200;
+    opacity: 0;
+    text-align: center;
+    background: rgba(0,0,0,0.8);
+    padding: 15px 30px;
+    border-radius: 20px;
+    border: 3px solid #ffd700;
+  }
+  
+  #mensaje.show {
+    opacity: 1;
+    animation: messagePop 1.5s ease-out;
+  }
+  
+  @keyframes messagePop {
+    0% { transform: translate(-50%, -50%) scale(0.5); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+  
+  .hidden { display: none !important; }
+  
+  .progress-bar {
+    width: 100%;
+    height: 12px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 5px;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #ff8c00);
+    transition: width 0.3s;
+  }
+  
+  #controles {
+    margin-top: 10px;
+    background: rgba(0,0,0,0.6);
+    padding: 8px 15px;
+    border-radius: 10px;
+    border: 2px solid #ffd700;
+    text-align: center;
+    font-size: 0.85em;
+    width: 800px;
+    max-width: 95vw;
+  }
+  
+  .key {
+    display: inline-block;
+    background: #4a7c4a;
+    padding: 2px 8px;
+    border-radius: 5px;
+    margin: 0 3px;
+    font-weight: bold;
+    border: 2px solid #ffd700;
+  }
+  
+  .hearts {
+    color: #ff4444;
+    font-size: 1.2em;
+    letter-spacing: 2px;
+  }
+  
+  .shop-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 15px;
+    border: 2px solid #ffd700;
+  }
+  
+  .shop-title {
+    color: #ffd700;
+    font-size: 1.3em;
+    margin-bottom: 15px;
+  }
+  
+  .credits-display {
+    font-size: 1.6em;
+    color: #ffd700;
+    margin: 15px 0;
+    text-shadow: 2px 2px 4px #000;
+  }
+  
+  .weapons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+  
+  .weapon-card {
+    background: linear-gradient(135deg, #3a3a3a 0%, #1a1a1a 100%);
+    border: 3px solid #666;
+    border-radius: 15px;
+    padding: 12px;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  
+  .weapon-card:hover {
+    transform: translateY(-5px);
+    border-color: #ffd700;
+    box-shadow: 0 10px 20px rgba(255,215,0,0.3);
+  }
+  
+  .weapon-card.owned {
+    border-color: #00ff00;
+    background: linear-gradient(135deg, #2a4a2a 0%, #1a3a1a 100%);
+  }
+  
+  .weapon-card.equipped {
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255,215,0,0.5);
+  }
+  
+  .weapon-icon {
+    font-size: 2.5em;
+    margin: 10px 0;
+  }
+  
+  .weapon-name {
+    font-size: 1.1em;
+    color: #ffd700;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+  
+  .weapon-stats {
+    font-size: 0.85em;
+    color: #90EE90;
+    margin: 10px 0;
+  }
+  
+  .weapon-price {
+    font-size: 1.2em;
+    color: #ffd700;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+  
+  .credit-packages {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  
+  .credit-package {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+    color: #000;
+    padding: 15px 25px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 3px solid #fff;
+  }
+  
+  .credit-package:hover {
+    transform: scale(1.1);
+    box-shadow: 0 10px 30px rgba(255,215,0,0.5);
+  }
+  
+  .credit-amount {
+    font-size: 1.8em;
+    font-weight: bold;
+  }
+  
+  .credit-price {
+    font-size: 1.1em;
+    margin-top: 5px;
+  }
+  
+  .btn-buy {
+    background: linear-gradient(180deg, #00ff00 0%, #00aa00 100%);
+    padding: 6px 15px;
+    font-size: 0.9em;
+    margin: 5px;
+  }
+  
+  .btn-equip {
+    background: linear-gradient(180deg, #4a90e2 0%, #2a60a2 100%);
+    padding: 6px 15px;
+    font-size: 0.9em;
+    margin: 5px;
+  }
+  
+  .btn-equipped {
+    background: linear-gradient(180deg, #ffd700 0%, #ff8c00 100%);
+    padding: 6px 15px;
+    font-size: 0.9em;
+    margin: 5px;
+    cursor: default;
+  }
+  
+  @media (max-width: 850px) {
+    #hud {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
+    h1 {
+      font-size: 1.5em;
+    }
+  }
+  
+  @media (max-width: 600px) {
+    #hud {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .hud-item {
+      font-size: 0.7em;
+    }
+  }
+</style>
+</head>
+<body>
+  <h1>🐻 MINEROSO 3D - El Guardián del Bosque 🌲</h1>
+  
+  <div id="hud">
+    <div class="hud-item">
+      <span class="hud-label">🏔️ NIVEL</span>
+      <span class="hud-value" id="nivel">1/25</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">⭐ PUNTOS</span>
+      <span class="hud-value" id="puntos">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">⏱️ TIEMPO</span>
+      <span class="hud-value" id="tiempo">120</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">🎯 META</span>
+      <span class="hud-value" id="meta">0/30</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">❤️ VIDAS</span>
+      <span class="hud-value hearts" id="vidas">❤️❤️❤️❤️❤️</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">💰 CRÉDITOS</span>
+      <span class="hud-value" id="creditos">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">🏆 RECORD</span>
+      <span class="hud-value" id="record">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">🌸 ORQUÍDEAS</span>
+      <span class="hud-value" id="orquideas">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">💎 PIEDRAS</span>
+      <span class="hud-value" id="piedras">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">⚡ PODER</span>
+      <span class="hud-value" id="poder">1</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">🌍 BIOMA</span>
+      <span class="hud-value" id="bioma">Bosque</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">❤️ VIDA</span>
+      <div class="progress-bar">
+        <div class="progress-fill" id="vidaBar" style="width: 100%"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="gameContainer">
+    <canvas id="juego" width="800" height="500"></canvas>
+  </div>
+  
+  <div id="controles">
+    <strong>🎮 Controles 3D:</strong>
+    <span class="key">↑↓←→</span> o <span class="key">WASD</span> Moverse |
+    <span class="key">T</span> o <span class="key">ESPACIO</span> Saltar |
+    <span class="key">SHIFT</span> Correr
+  </div>
+  
+  <div id="mensaje"></div>
+  
+  <div id="modal">
+    <div class="modal-content" id="modalContent">
+      <h2 class="modal-title">🐻 Bienvenido a MINEROSO 3D</h2>
+      <p style="font-size: 1.2em; margin: 20px 0;">
+        Eres el guardián del bosque en un mundo 3D épico con 25 niveles. 
+        Recolecta orquídeas y piedras preciosas, derrota a los demonios y magos oscuros.
+      </p>
+      <p style="margin: 15px 0; color: #90EE90;">
+        ❤️ Tienes 5 vidas. Si fallas 5 preguntas, el juego termina.
+      </p>
+      <button onclick="iniciarJuego()">🌟 Comenzar Aventura 3D</button>
+    </div>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ==================== CONFIGURACIÓN 3D ====================
+let scene, camera, renderer;
+let jugador, suelo;
+let coleccionables = [];
+let enemigos = [];
+let obstaculos = [];
+let elementosPaisaje = [];
+let clock = new THREE.Clock();
+
+// Variables del juego
+let estado = {
+  nivelActual: 0,
+  puntos: 0,
+  record: parseInt(localStorage.getItem('mineroso_record')) || 0,
+  creditos: parseInt(localStorage.getItem('mineroso_creditos')) || 0,
+  tiempo: 120,
+  meta: 0,
+  progreso: 0,
+  corriendo: false,
+  juegoTerminado: false,
+  orquideas: 0,
+  piedras: 0,
+  vida: 100,
+  vidas: 5,
+  poder: 1,
+  velocidadBase: 0.2,
+  velocidadSalto: 0.35,
+  gravedad: 0.015,
+  enSuelo: true,
+  velocidadY: 0,
+  preguntasFalladas: 0,
+  biomaActual: 'Bosque',
+  armaEquipada: null,
+  armasPoseidas: JSON.parse(localStorage.getItem('mineroso_armas')) || []
+};
+
+let teclas = {};
+let intervaloJuego = null;
+let canvas = document.getElementById('juego');
+
+// Catálogo de armas
+const ARMAS = [
+  {
+    id: 'espada_fuego',
+    nombre: 'Espada de Fuego',
+    icono: '🔥',
+    precio: 50,
+    daño: 25,
+    velocidad: 1.2,
+    descripcion: 'Causa daño de fuego a enemigos cercanos',
+    color: 0xff4500,
+    efecto: 'fire'
+  },
+  {
+    id: 'arco_elfico',
+    nombre: 'Arco Élfico',
+    icono: '🏹',
+    precio: 75,
+    daño: 30,
+    velocidad: 1.5,
+    descripcion: 'Ataque a distancia con flechas mágicas',
+    color: 0x00ff00,
+    efecto: 'arrow'
+  },
+  {
+    id: 'baculo_magico',
+    nombre: 'Báculo Mágico',
+    icono: '🔮',
+    precio: 100,
+    daño: 35,
+    velocidad: 1.0,
+    descripcion: 'Lanza proyectiles de energía mágica',
+    color: 0x9400d3,
+    efecto: 'magic'
+  },
+  {
+    id: 'martillo_trueno',
+    nombre: 'Martillo de Trueno',
+    icono: '⚡',
+    precio: 120,
+    daño: 40,
+    velocidad: 0.8,
+    descripcion: 'Golpe poderoso con daño de área',
+    color: 0x00bfff,
+    efecto: 'thunder'
+  },
+  {
+    id: 'daga_sombra',
+    nombre: 'Daga de Sombra',
+    icono: '🗡️',
+    precio: 80,
+    daño: 28,
+    velocidad: 2.0,
+    descripcion: 'Ataque rápido con efecto de veneno',
+    color: 0x2a2a2a,
+    efecto: 'poison'
+  },
+  {
+    id: 'hacha_gelo',
+    nombre: 'Hacha de Hielo',
+    icono: '❄️',
+    precio: 90,
+    daño: 32,
+    velocidad: 1.1,
+    descripcion: 'Congela enemigos temporalmente',
+    color: 0x00ffff,
+    efecto: 'ice'
+  },
+  {
+    id: 'lanza_luz',
+    nombre: 'Lanza de Luz',
+    icono: '✨',
+    precio: 150,
+    daño: 45,
+    velocidad: 1.3,
+    descripcion: 'Daño sagrado contra demonios',
+    color: 0xffff00,
+    efecto: 'holy'
+  },
+  {
+    id: 'guadaña_muerte',
+    nombre: 'Guadaña de la Muerte',
+    icono: '💀',
+    precio: 200,
+    daño: 50,
+    velocidad: 0.9,
+    descripcion: 'Arma definitiva con daño masivo',
+    color: 0x000000,
+    efecto: 'death'
+  }
+];
+
+// 25 Biomas/Paisajes diferentes
+const BIOMAS = [
+  { nombre: "Bosque Tropical", colorSuelo: 0x3d5c3d, colorCielo: 0x87CEEB, niebla: 0x87CEEB },
+  { nombre: "Selva Densa", colorSuelo: 0x2d4a2d, colorCielo: 0x6B8E6B, niebla: 0x6B8E6B },
+  { nombre: "Cataratas", colorSuelo: 0x4a5c4a, colorCielo: 0xADD8E6, niebla: 0xADD8E6 },
+  { nombre: "Montañas", colorSuelo: 0x6B6B6B, colorCielo: 0xB0C4DE, niebla: 0xB0C4DE },
+  { nombre: "Río", colorSuelo: 0x4a6a4a, colorCielo: 0x87CEEB, niebla: 0x87CEEB },
+  { nombre: "Aldea", colorSuelo: 0x5c4a3d, colorCielo: 0xFFE4B5, niebla: 0xFFE4B5 },
+  { nombre: "Campo", colorSuelo: 0x7c9c3d, colorCielo: 0x87CEEB, niebla: 0x87CEEB },
+  { nombre: "Pantano", colorSuelo: 0x3d4a2d, colorCielo: 0x6B8E6B, niebla: 0x6B8E6B },
+  { nombre: "Cascada", colorSuelo: 0x4a5c4a, colorCielo: 0xADD8E6, niebla: 0xADD8E6 },
+  { nombre: "Valle", colorSuelo: 0x5c7c3d, colorCielo: 0x87CEEB, niebla: 0x87CEEB },
+  { nombre: "Cañón", colorSuelo: 0x8B4513, colorCielo: 0xFFE4B5, niebla: 0xFFE4B5 },
+  { nombre: "Lago", colorSuelo: 0x4a6a4a, colorCielo: 0x87CEEB, niebla: 0x87CEEB },
+  { nombre: "Pradera", colorSuelo: 0x7c9c3d, colorCielo: 0x87CEEB, niebla: 0x87CEEB },
+  { nombre: "Bosque de Pinos", colorSuelo: 0x2d4a2d, colorCielo: 0xB0C4DE, niebla: 0xB0C4DE },
+  { nombre: "Jungla", colorSuelo: 0x1a3a1a, colorCielo: 0x6B8E6B, niebla: 0x6B8E6B },
+  { nombre: "Desierto", colorSuelo: 0xD2B48C, colorCielo: 0xFFE4B5, niebla: 0xFFE4B5 },
+  { nombre: "Tundra", colorSuelo: 0xD3D3D3, colorCielo: 0xB0C4DE, niebla: 0xB0C4DE },
+  { nombre: "Volcán", colorSuelo: 0x4a3728, colorCielo: 0xFF6347, niebla: 0xFF6347 },
+  { nombre: "Isla", colorSuelo: 0xF4A460, colorCielo: 0x87CEEB, niebla: 0x87CEEB },
+  { nombre: "Cueva", colorSuelo: 0x2a2a2a, colorCielo: 0x1a1a1a, niebla: 0x1a1a1a },
+  { nombre: "Glaciar", colorSuelo: 0xE0FFFF, colorCielo: 0xB0C4DE, niebla: 0xB0C4DE },
+  { nombre: "Sabana", colorSuelo: 0xD2B48C, colorCielo: 0xFFE4B5, niebla: 0xFFE4B5 },
+  { nombre: "Manglar", colorSuelo: 0x3d4a2d, colorCielo: 0x6B8E6B, niebla: 0x6B8E6B },
+  { nombre: "Bosque Nublado", colorSuelo: 0x2d4a2d, colorCielo: 0xB0C4DE, niebla: 0xB0C4DE },
+  { nombre: "Núcleo del Bosque", colorSuelo: 0x1a3a1a, colorCielo: 0x0a2a0a, niebla: 0x0a2a0a }
+];
+
+// Banco de preguntas (5 por nivel = 125 preguntas)
+const BANCO_PREGUNTAS = [
+  [
+    { p: "¿Qué porcentaje del oxígeno producen los bosques?", r: ["20%", "50%", "80%"], c: 1 },
+    { p: "¿Cuántos árboles hay en la Tierra?", r: ["1 billón", "3 billones", "10 billones"], c: 1 },
+    { p: "¿Qué gas absorben los árboles?", r: ["Oxígeno", "CO2", "Nitrógeno"], c: 1 },
+    { p: "¿Cuál es el animal más grande del bosque?", r: ["Oso", "Elefante", "Jirafa"], c: 0 },
+    { p: "¿Qué necesitan las plantas para vivir?", r: ["Solo agua", "Luz y agua", "Solo tierra"], c: 1 }
+  ],
+  [
+    { p: "¿Cuál es la piedra más dura?", r: ["Rubí", "Diamante", "Zafiro"], c: 1 },
+    { p: "¿De qué color es la esmeralda?", r: ["Rojo", "Azul", "Verde"], c: 2 },
+    { p: "¿Qué mineral es el cuarzo?", r: ["Metal", "Cristal", "Roca"], c: 1 },
+    { p: "¿Dónde se encuentran los diamantes?", r: ["Ríos", "Minas profundas", "Volcanes"], c: 1 },
+    { p: "¿Qué es una gema?", r: ["Piedra preciosa", "Metal", "Plástico"], c: 0 }
+  ],
+  [
+    { p: "¿Cuántos árboles necesita una persona al año?", r: ["2", "10", "20"], c: 0 },
+    { p: "¿Qué es la fotosíntesis?", r: ["Respiración", "Alimentación", "Reproducción"], c: 1 },
+    { p: "¿Dónde crecen las orquídeas?", r: ["Solo suelo", "Árboles y suelo", "Solo agua"], c: 1 },
+    { p: "¿Qué es un ecosistema?", r: ["Un árbol", "Comunidad de vida", "Una piedra"], c: 1 },
+    { p: "¿Qué animal poliniza flores?", r: ["Pez", "Abeja", "Roca"], c: 1 }
+  ],
+  [
+    { p: "¿Qué orquídea produce vainilla?", r: ["Phalaenopsis", "Vanilla planifolia", "Cattleya"], c: 1 },
+    { p: "¿Cuántas especies de orquídeas existen?", r: ["1,000", "10,000", "30,000+"], c: 2 },
+    { p: "¿Qué necesitan las orquídeas?", r: ["Mucha agua", "Poca luz", "Humedad"], c: 2 },
+    { p: "¿Qué es una flor endémica?", r: ["Común", "Exclusiva de un lugar", "Artificial"], c: 1 },
+    { p: "¿Qué color tiene la orquídea más rara?", r: ["Negro", "Azul", "Dorado"], c: 1 }
+  ],
+  [
+    { p: "¿Cuánto tarda en crecer un bosque?", r: ["10 años", "50 años", "Miles de años"], c: 2 },
+    { p: "¿Qué es la deforestación?", r: ["Plantar", "Talar bosques", "Cuidar"], c: 1 },
+    { p: "¿Qué animal depende del bosque?", r: ["Pez", "Oso", "Pingüino"], c: 1 },
+    { p: "¿Qué pasa si talamos bosques?", r: ["Más oxígeno", "Menos oxígeno", "Nada"], c: 1 },
+    { p: "¿Qué es la reforestación?", r: ["Talar", "Plantar árboles", "Quemar"], c: 1 }
+  ],
+  [
+    { p: "¿Qué gas causa calentamiento global?", r: ["Oxígeno", "CO2", "Helio"], c: 1 },
+    { p: "¿Qué es el efecto invernadero?", r: ["Bueno", "Calentamiento", "Enfriamiento"], c: 1 },
+    { p: "¿Qué amenaza a los bosques?", r: ["Lluvia", "Incendios", "Nieve"], c: 1 },
+    { p: "¿Qué son los pulmones del planeta?", r: ["Océanos", "Bosques", "Desiertos"], c: 1 },
+    { p: "¿Cuánto CO2 absorbe un árbol al año?", r: ["2kg", "22kg", "220kg"], c: 1 }
+  ],
+  [
+    { p: "¿Dónde está la esmeralda más grande?", r: ["Brasil", "Colombia", "Perú"], c: 1 },
+    { p: "¿Qué país tiene más bosques?", r: ["Brasil", "Rusia", "China"], c: 1 },
+    { p: "¿Qué es la biodiversidad?", r: ["Variedad de vida", "Un árbol", "Una piedra"], c: 0 },
+    { p: "¿Cuántas especies hay en la Tierra?", r: ["1 millón", "8 millones", "100 millones"], c: 1 },
+    { p: "¿Qué es una especie en peligro?", r: ["Común", "Amenazada", "Extinta"], c: 1 }
+  ],
+  [
+    { p: "¿Qué % de biodiversidad hay en bosques?", r: ["30%", "50%", "80%"], c: 2 },
+    { p: "¿Qué cubre el 31% de la Tierra?", r: ["Agua", "Bosques", "Desiertos"], c: 1 },
+    { p: "¿Por qué salvar los bosques?", r: ["Madera", "Vida y oxígeno", "Espacio"], c: 1 },
+    { p: "¿Qué es un bosque primario?", r: ["Joven", "Virgen/antiguo", "Pequeño"], c: 1 },
+    { p: "¿Cuántos bosques hay en el mundo?", r: ["100", "1,000", "4,000 millones"], c: 2 }
+  ],
+  [
+    { p: "¿Cuántas orquídeas hay en Colombia?", r: ["100", "1,000", "3,500+"], c: 2 },
+    { p: "¿Qué poliniza orquídeas?", r: ["Viento", "Insectos y aves", "Agua"], c: 1 },
+    { p: "¿Qué es una especie endémica?", r: ["Común", "Exclusiva", "Extranjera"], c: 1 },
+    { p: "¿Dónde hay más orquídeas?", r: ["Desierto", "Trópicos", "Ártico"], c: 1 },
+    { p: "¿Qué es la simbiosis?", r: ["Competencia", "Cooperación", "Depredación"], c: 1 }
+  ],
+  [
+    { p: "¿Cuál es el bosque más grande?", r: ["Amazonas", "Taiga Siberiana", "Congo"], c: 1 },
+    { p: "¿Qué es la Taiga?", r: ["Bosque tropical", "Bosque boreal", "Desierto"], c: 1 },
+    { p: "¿Cuántos ríos hay en el Amazonas?", r: ["100", "1,000", "1,100+"], c: 2 },
+    { p: "¿Qué es un bioma?", r: ["Un árbol", "Ecosistema grande", "Una flor"], c: 1 },
+    { p: "¿Qué es la capa de ozono?", r: ["Suelo", "Protección atmosférica", "Agua"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la erosión?", r: ["Crecimiento", "Desgaste del suelo", "Plantación"], c: 1 },
+    { p: "¿Qué es un acuífero?", r: ["Río", "Depósito de agua subterránea", "Lago"], c: 1 },
+    { p: "¿Qué es la cadena trófica?", r: ["Cadena de tiendas", "Relación alimenticia", "Cadena de montañas"], c: 1 },
+    { p: "¿Qué es un depredador tope?", r: ["El más pequeño", "El más grande cazador", "Una planta"], c: 1 },
+    { p: "¿Qué es la migración animal?", r: ["Dormir", "Desplazamiento estacional", "Comer"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es el ciclo del agua?", r: ["Un río", "Evaporación y lluvia", "Un lago"], c: 1 },
+    { p: "¿Qué es la transpiración?", r: ["Sudar", "Plantas liberan agua", "Lluvia"], c: 1 },
+    { p: "¿Qué es un humedal?", r: ["Desierto", "Zona con agua", "Montaña"], c: 1 },
+    { p: "¿Qué es la eutrofización?", r: ["Contaminación por nutrientes", "Limpieza", "Erosión"], c: 0 },
+    { p: "¿Qué es un manglar?", r: ["Bosque costero", "Desierto", "Montaña"], c: 0 }
+  ],
+  [
+    { p: "¿Qué es la sucesión ecológica?", r: ["Cambio de ecosistema", "Un río", "Una montaña"], c: 0 },
+    { p: "¿Qué es un nicho ecológico?", r: ["Casa", "Rol en ecosistema", "Comida"], c: 1 },
+    { p: "¿Qué es la competencia interespecífica?", r: ["Misma especie", "Diferentes especies", "Plantas"], c: 1 },
+    { p: "¿Qué es el mutualismo?", r: ["Daño mutuo", "Beneficio mutuo", "Neutral"], c: 1 },
+    { p: "¿Qué es un parásito?", r: ["Ayuda", "Se beneficia del huésped", "Neutral"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la biomasa?", r: ["Energía", "Materia orgánica", "Agua"], c: 1 },
+    { p: "¿Qué es el carbono azul?", r: ["Carbono en océanos", "Carbono en aire", "Carbono en suelo"], c: 0 },
+    { p: "¿Qué es un sumidero de carbono?", r: ["Fuente de CO2", "Absorbe CO2", "Neutral"], c: 1 },
+    { p: "¿Qué es la acidificación oceánica?", r: ["pH sube", "pH baja", "pH igual"], c: 1 },
+    { p: "¿Qué es el albedo?", r: ["Reflectividad", "Temperatura", "Presión"], c: 0 }
+  ],
+  [
+    { p: "¿Qué es la fragmentación de hábitat?", r: ["Unión", "División de ecosistemas", "Crecimiento"], c: 1 },
+    { p: "¿Qué es un corredor biológico?", r: ["Carretera", "Conexión de hábitats", "Río"], c: 1 },
+    { p: "¿Qué es la resiliencia ecológica?", r: ["Debilidad", "Capacidad de recuperación", "Fragilidad"], c: 1 },
+    { p: "¿Qué es un servicio ecosistémico?", r: ["Tienda", "Beneficio de la naturaleza", "Trabajo"], c: 1 },
+    { p: "¿Qué es la polinización cruzada?", r: ["Misma flor", "Entre flores", "Sin flores"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la biogeografía?", r: ["Estudio de rocas", "Distribución de vida", "Estudio del agua"], c: 1 },
+    { p: "¿Qué es un hotspot de biodiversidad?", r: ["Lugar frío", "Zona con mucha biodiversidad", "Desierto"], c: 1 },
+    { p: "¿Cuántos hotspots hay en el mundo?", r: ["10", "36", "100"], c: 1 },
+    { p: "¿Qué es la especiación?", r: ["Extinción", "Formación de especies", "Migración"], c: 1 },
+    { p: "¿Qué es la radiación adaptativa?", r: ["Energía", "Diversificación rápida", "Extinción"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la coevolución?", r: ["Evolución separada", "Evolución conjunta", "Sin evolución"], c: 1 },
+    { p: "¿Qué es un fósil viviente?", r: ["Fósil antiguo", "Especie antigua viva", "Roca"], c: 1 },
+    { p: "¿Qué es la convergencia evolutiva?", r: ["Diferenciación", "Similitud por adaptación", "Extinción"], c: 1 },
+    { p: "¿Qué es la deriva genética?", r: ["Selección natural", "Cambio aleatorio", "Mutación"], c: 1 },
+    { p: "¿Qué es el flujo génico?", r: ["Aislamiento", "Intercambio de genes", "Extinción"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la biología de la conservación?", r: ["Estudio de rocas", "Protección de especies", "Agricultura"], c: 1 },
+    { p: "¿Qué es una UICN?", r: ["Universidad", "Unión Internacional Conservación", "Empresa"], c: 1 },
+    { p: "¿Cuántas categorías de amenaza hay?", r: ["3", "7", "10"], c: 1 },
+    { p: "¿Qué es CR en UICN?", r: ["Común", "En peligro crítico", "Recuperado"], c: 1 },
+    { p: "¿Qué es un plan de manejo?", r: ["Plan de negocios", "Estrategia de conservación", "Mapa"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la ecología del paisaje?", r: ["Pintura", "Estudio de paisajes", "Fotografía"], c: 1 },
+    { p: "¿Qué es un metaecosistema?", r: ["Ecosistema simple", "Conjunto de ecosistemas", "Un lago"], c: 1 },
+    { p: "¿Qué es la conectividad ecológica?", r: ["Aislamiento", "Conexión de hábitats", "Separación"], c: 1 },
+    { p: "¿Qué es la heterogeneidad espacial?", r: ["Uniformidad", "Variabilidad", "Simplicidad"], c: 1 },
+    { p: "¿Qué es un ecotono?", r: ["Centro", "Zona de transición", "Borde"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la teledetección?", r: ["Control remoto", "Observación satelital", "Radio"], c: 1 },
+    { p: "¿Qué es un SIG?", r: ["Sistema de Información Geográfica", "Señal", "Satélite"], c: 0 },
+    { p: "¿Qué es el NDVI?", r: ["Índice de vegetación", "Índice de agua", "Índice de suelo"], c: 0 },
+    { p: "¿Qué es la fotogrametría?", r: ["Fotografía artística", "Medición con fotos", "Pintura"], c: 1 },
+    { p: "¿Qué es LiDAR?", r: ["Láser para mapeo", "Radio", "Satélite"], c: 0 }
+  ],
+  [
+    { p: "¿Qué es la ecofisiología?", r: ["Fisiología de ecosistemas", "Fisiología animal", "Botánica"], c: 0 },
+    { p: "¿Qué es la fenología?", r: ["Estudio de fenómenos", "Estudio de tiempos biológicos", "Geología"], c: 1 },
+    { p: "¿Qué es la alometría?", r: ["Estudio de tamaño", "Estudio de forma", "Estudio de color"], c: 0 },
+    { p: "¿Qué es la plasticidad fenotípica?", r: ["Rigidez", "Capacidad de cambio", "Extinción"], c: 1 },
+    { p: "¿Qué es la epigenética?", r: ["Genética clásica", "Cambios sin alterar ADN", "Mutación"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la biología sintética?", r: ["Biología natural", "Diseño de sistemas biológicos", "Química"], c: 1 },
+    { p: "¿Qué es CRISPR?", r: ["Proteína", "Técnica de edición genética", "Virus"], c: 1 },
+    { p: "¿Qué es la biología de sistemas?", r: ["Estudio de partes", "Estudio integral", "Anatomía"], c: 1 },
+    { p: "¿Qué es la ómica?", r: ["Estudio de genomas", "Estudio de todo", "Biología"], c: 1 },
+    { p: "¿Qué es la metagenómica?", r: ["Genómica de comunidades", "Genómica individual", "Proteómica"], c: 0 }
+  ],
+  [
+    { p: "¿Qué es la biología computacional?", r: ["Biología con computadoras", "Informática", "Programación"], c: 0 },
+    { p: "¿Qué es el machine learning en biología?", r: ["Aprendizaje automático", "Estudio manual", "Observación"], c: 0 },
+    { p: "¿Qué es la bioinformática?", r: ["Informática", "Análisis de datos biológicos", "Programación"], c: 1 },
+    { p: "¿Qué es un modelo ecológico?", r: ["Maqueta", "Representación matemática", "Dibujo"], c: 1 },
+    { p: "¿Qué es la simulación ecológica?", r: ["Juego", "Modelado de ecosistemas", "Película"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la biología de la conservación genética?", r: ["Conservación de genes", "Protección de diversidad genética", "Clonación"], c: 1 },
+    { p: "¿Qué es la depresión endogámica?", r: ["Ventaja", "Reducción de fitness", "Mejora"], c: 1 },
+    { p: "¿Qué es el efecto fundador?", r: ["Efecto de fundación", "Pérdida de diversidad", "Crecimiento"], c: 1 },
+    { p: "¿Qué es un cuello de botella genético?", r: ["Expansión", "Reducción drástica de población", "Migración"], c: 1 },
+    { p: "¿Qué es la diversidad genética?", r: ["Uniformidad", "Variabilidad genética", "Similitud"], c: 1 }
+  ],
+  [
+    { p: "¿Qué es la resiliencia climática?", r: ["Fragilidad", "Capacidad de adaptación", "Debilidad"], c: 1 },
+    { p: "¿Qué es la mitigación climática?", r: ["Adaptación", "Reducción de emisiones", "Contaminación"], c: 1 },
+    { p: "¿Qué es el Acuerdo de París?", r: ["Tratado de paz", "Acuerdo climático", "Tratado comercial"], c: 1 },
+    { p: "¿Qué es la neutralidad de carbono?", r: ["Más emisiones", "Balance cero emisiones", "Sin emisiones"], c: 1 },
+    { p: "¿Qué es la economía circular?", r: ["Economía lineal", "Reutilización y reciclaje", "Consumo"], c: 1 }
+  ]
+];
+
+// Inicializar Three.js
+function init3D() {
+  const container = document.getElementById('gameContainer');
+  
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87CEEB);
+  scene.fog = new THREE.Fog(0x87CEEB, 30, 150);
+  
+  camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 1000);
+  camera.position.set(0, 15, 25);
+  camera.lookAt(0, 0, 0);
+  
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setSize(canvas.width, canvas.height);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+  scene.add(ambientLight);
+  
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  dirLight.position.set(50, 100, 50);
+  dirLight.castShadow = true;
+  dirLight.shadow.camera.left = -80;
+  dirLight.shadow.camera.right = 80;
+  dirLight.shadow.camera.top = 80;
+  dirLight.shadow.camera.bottom = -80;
+  dirLight.shadow.mapSize.width = 2048;
+  dirLight.shadow.mapSize.height = 2048;
+  scene.add(dirLight);
+  
+  const fillLight = new THREE.DirectionalLight(0x8888ff, 0.3);
+  fillLight.position.set(-50, 50, -50);
+  scene.add(fillLight);
+  
+  const rimLight = new THREE.DirectionalLight(0xffd700, 0.2);
+  rimLight.position.set(0, 20, -50);
+  scene.add(rimLight);
+  
+  const groundGeometry = new THREE.PlaneGeometry(150, 150, 50, 50);
+  const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x3d5c3d, side: THREE.DoubleSide });
+  suelo = new THREE.Mesh(groundGeometry, groundMaterial);
+  suelo.rotation.x = -Math.PI / 2;
+  suelo.receiveShadow = true;
+  scene.add(suelo);
+  
+  crearJugador();
+}
+
+function crearJugador() {
+  jugador = new THREE.Group();
+  
+  const bodyGeo = new THREE.BoxGeometry(2, 2.5, 1.5);
+  const bodyMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = 2.5;
+  body.castShadow = true;
+  jugador.add(body);
+  
+  const headGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+  const headMat = new THREE.MeshLambertMaterial({ color: 0x2a2a2a });
+  const head = new THREE.Mesh(headGeo, headMat);
+  head.position.y = 4.2;
+  head.castShadow = true;
+  jugador.add(head);
+  
+  const snoutGeo = new THREE.BoxGeometry(0.8, 0.6, 0.8);
+  const snoutMat = new THREE.MeshLambertMaterial({ color: 0xd4a574 });
+  const snout = new THREE.Mesh(snoutGeo, snoutMat);
+  snout.position.set(0, 4.0, 0.9);
+  jugador.add(snout);
+  
+  const noseGeo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+  const noseMat = new THREE.MeshLambertMaterial({ color: 0x000000 });
+  const nose = new THREE.Mesh(noseGeo, noseMat);
+  nose.position.set(0, 4.0, 1.3);
+  jugador.add(nose);
+  
+  const eyeGeo = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+  const eyeMat = new THREE.MeshLambertMaterial({ color: 0x000000 });
+  const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeL.position.set(-0.4, 4.3, 0.7);
+  jugador.add(eyeL);
+  const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeR.position.set(0.4, 4.3, 0.7);
+  jugador.add(eyeR);
+  
+  const earGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  const earMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+  const earL = new THREE.Mesh(earGeo, earMat);
+  earL.position.set(-0.6, 5.0, 0);
+  jugador.add(earL);
+  const earR = new THREE.Mesh(earGeo, earMat);
+  earR.position.set(0.6, 5.0, 0);
+  jugador.add(earR);
+  
+  const bandanaGeo = new THREE.BoxGeometry(1.6, 0.3, 1.6);
+  const bandanaMat = new THREE.MeshLambertMaterial({ color: 0xdc143c });
+  const bandana = new THREE.Mesh(bandanaGeo, bandanaMat);
+  bandana.position.y = 4.9;
+  jugador.add(bandana);
+  
+  const knotGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+  const knot = new THREE.Mesh(knotGeo, bandanaMat);
+  knot.position.set(0.7, 4.9, 0.3);
+  jugador.add(knot);
+  
+  const capeGeo = new THREE.BoxGeometry(3, 2.5, 0.3);
+  const capeMat = new THREE.MeshLambertMaterial({ color: 0x8b0000 });
+  const cape = new THREE.Mesh(capeGeo, capeMat);
+  cape.position.set(0, 2.5, -0.9);
+  cape.castShadow = true;
+  jugador.add(cape);
+  
+  const trimGeo = new THREE.BoxGeometry(3.1, 0.2, 0.4);
+  const trimMat = new THREE.MeshLambertMaterial({ color: 0xffd700 });
+  const trim = new THREE.Mesh(trimGeo, trimMat);
+  trim.position.set(0, 1.3, -0.9);
+  jugador.add(trim);
+  
+  const legGeo = new THREE.BoxGeometry(0.6, 1.5, 0.6);
+  const legMat = new THREE.MeshLambertMaterial({ color: 0x228b22 });
+  const legL = new THREE.Mesh(legGeo, legMat);
+  legL.position.set(-0.5, 1, 0);
+  legL.castShadow = true;
+  jugador.add(legL);
+  const legR = new THREE.Mesh(legGeo, legMat);
+  legR.position.set(0.5, 1, 0);
+  legR.castShadow = true;
+  jugador.add(legR);
+  
+  const bootGeo = new THREE.BoxGeometry(0.7, 0.5, 0.8);
+  const bootMat = new THREE.MeshLambertMaterial({ color: 0x006400 });
+  const bootL = new THREE.Mesh(bootGeo, bootMat);
+  bootL.position.set(-0.5, 0.25, 0.1);
+  jugador.add(bootL);
+  const bootR = new THREE.Mesh(bootGeo, bootMat);
+  bootR.position.set(0.5, 0.25, 0.1);
+  jugador.add(bootR);
+  
+  const backpackGeo = new THREE.BoxGeometry(1.2, 1.5, 0.8);
+  const backpackMat = new THREE.MeshLambertMaterial({ color: 0x228b22 });
+  const backpack = new THREE.Mesh(backpackGeo, backpackMat);
+  backpack.position.set(0, 2.5, -1);
+  jugador.add(backpack);
+  
+  const ropeGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.8, 8);
+  const ropeMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+  const rope = new THREE.Mesh(ropeGeo, ropeMat);
+  rope.position.set(0, 3.5, -1);
+  rope.rotation.z = Math.PI / 2;
+  jugador.add(rope);
+  
+  const binocularGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.6, 8);
+  const binocularMat = new THREE.MeshLambertMaterial({ color: 0x4a4a4a });
+  const binocularL = new THREE.Mesh(binocularGeo, binocularMat);
+  binocularL.position.set(-0.2, 3, 0.8);
+  binocularL.rotation.x = Math.PI / 2;
+  jugador.add(binocularL);
+  const binocularR = new THREE.Mesh(binocularGeo, binocularMat);
+  binocularR.position.set(0.2, 3, 0.8);
+  binocularR.rotation.x = Math.PI / 2;
+  jugador.add(binocularR);
+  
+  const knifeHandleGeo = new THREE.BoxGeometry(0.2, 0.6, 0.2);
+  const knifeHandleMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+  const knifeHandle = new THREE.Mesh(knifeHandleGeo, knifeHandleMat);
+  knifeHandle.position.set(0.9, 2, 0);
+  jugador.add(knifeHandle);
+  
+  const knifeBladeGeo = new THREE.BoxGeometry(0.1, 0.8, 0.3);
+  const knifeBladeMat = new THREE.MeshLambertMaterial({ color: 0xc0c0c0 });
+  const knifeBlade = new THREE.Mesh(knifeBladeGeo, knifeBladeMat);
+  knifeBlade.position.set(0.9, 2.5, 0);
+  jugador.add(knifeBlade);
+  
+  jugador.position.set(0, 0, 0);
+  jugador.userData = { legL, legR, velocidad: 0 };
+  scene.add(jugador);
+}
+
+// ==================== INICIAR NIVEL ====================
+function iniciarNivel(nivelIndex) {
+  const tiempos = [120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240];
+  const metas = [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150];
+  
+  estado.nivelActual = nivelIndex;
+  estado.meta = metas[nivelIndex];
+  estado.tiempo = tiempos[nivelIndex];
+  estado.poder = nivelIndex + 1;
+  estado.progreso = 0;
+  estado.vida = 100;
+  estado.corriendo = true;
+  estado.juegoTerminado = false;
+  estado.biomaActual = BIOMAS[nivelIndex].nombre;
+  
+  // Limpiar nivel anterior
+  coleccionables.forEach(c => scene.remove(c));
+  enemigos.forEach(e => scene.remove(e));
+  coleccionables = [];
+  enemigos = [];
+  
+  if (jugador) {
+    jugador.position.set(0, 0, 0);
+    jugador.rotation.set(0, 0, 0);
+  }
+  
+  // Crear nuevo nivel
+  crearPaisaje(nivelIndex);
+  crearColeccionables();
+  
+  mostrarMensaje(`🌲 Nivel ${nivelIndex + 1}\n${BIOMAS[nivelIndex].nombre}`);
+  
+  // Iniciar generación de enemigos
+  if (intervaloJuego) clearInterval(intervaloJuego);
+  intervaloJuego = setInterval(() => {
+    if (Math.random() < 0.3) crearEnemigo();
+  }, 4000);
+}
+
+// ==================== PAISAJES ====================
+function crearPaisaje(biomaIndex) {
+  elementosPaisaje.forEach(e => scene.remove(e));
+  elementosPaisaje = [];
+  obstaculos.forEach(o => scene.remove(o));
+  obstaculos = [];
+  
+  const bioma = BIOMAS[biomaIndex];
+  
+  scene.background = new THREE.Color(bioma.colorCielo);
+  scene.fog = new THREE.Fog(bioma.niebla, 30, 150);
+  suelo.material.color.setHex(bioma.colorSuelo);
+  
+  // Crear árboles simples
+  for (let i = 0; i < 20; i++) {
+    const tree = new THREE.Group();
+    
+    const trunkGeo = new THREE.CylinderGeometry(0.3, 0.5, 3, 8);
+    const trunkMat = new THREE.MeshLambertMaterial({ color: 0x4a3728 });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.y = 1.5;
+    trunk.castShadow = true;
+    tree.add(trunk);
+    
+    const leavesGeo = new THREE.ConeGeometry(2, 5, 8);
+    const leavesMat = new THREE.MeshLambertMaterial({ color: 0x0d4a0d });
+    const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+    leaves.position.y = 4;
+    leaves.castShadow = true;
+    tree.add(leaves);
+    
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 30 + Math.random() * 40;
+    tree.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+    
+    scene.add(tree);
+    elementosPaisaje.push(tree);
+  }
+  
+  crearObstaculos();
+}
+
+function crearObstaculos() {
+  const numObstaculos = 10 + estado.nivelActual * 2;
+  
+  for (let i = 0; i < numObstaculos; i++) {
+    const tipo = Math.random();
+    let obstaculo;
+    
+    if (tipo < 0.3) {
+      const rockGeo = new THREE.BoxGeometry(1 + Math.random() * 2, 1 + Math.random() * 2, 1 + Math.random() * 2);
+      const rockMat = new THREE.MeshLambertMaterial({ color: 0x696969 });
+      obstaculo = new THREE.Mesh(rockGeo, rockMat);
+    } else if (tipo < 0.6) {
+      const logGeo = new THREE.CylinderGeometry(0.5, 0.5, 3, 8);
+      const logMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+      obstaculo = new THREE.Mesh(logGeo, logMat);
+      obstaculo.rotation.z = Math.PI / 2;
+    } else {
+      const bushGeo = new THREE.SphereGeometry(1.5, 8, 8);
+      const bushMat = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+      obstaculo = new THREE.Mesh(bushGeo, bushMat);
+    }
+    
+    obstaculo.position.set((Math.random() - 0.5) * 80, 1, (Math.random() - 0.5) * 80);
+    obstaculo.castShadow = true;
+    obstaculo.userData = { tipo: 'obstaculo' };
+    
+    scene.add(obstaculo);
+    obstaculos.push(obstaculo);
+  }
+}
+
+function crearColeccionables() {
+  coleccionables.forEach(c => scene.remove(c));
+  coleccionables = [];
+  
+  const numOrquideas = 10 + estado.nivelActual * 2;
+  const numPiedras = 8 + estado.nivelActual;
+  
+  for (let i = 0; i < numOrquideas; i++) {
+    const tipos = [
+      { color: 0xffffff, nombre: "Orquídea Blanca", valor: 10, emoji: "🌸" },
+      { color: 0xffb6c1, nombre: "Orquídea Rosa", valor: 15, emoji: "🌺" },
+      { color: 0x9370db, nombre: "Orquídea Púrpura", valor: 20, emoji: "🌷" },
+      { color: 0xffd700, nombre: "Orquídea Dorada", valor: 50, emoji: "🌼" }
+    ];
+    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+    
+    const geometry = new THREE.SphereGeometry(0.5, 16, 16);
+    const material = new THREE.MeshLambertMaterial({ 
+      color: tipo.color,
+      emissive: tipo.color,
+      emissiveIntensity: 0.5
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    
+    mesh.position.set((Math.random() - 0.5) * 80, 1, (Math.random() - 0.5) * 80);
+    mesh.userData = { tipo: 'orquidea', datos: tipo, animacion: Math.random() * Math.PI * 2 };
+    scene.add(mesh);
+    coleccionables.push(mesh);
+  }
+  
+  for (let i = 0; i < numPiedras; i++) {
+    const tipos = [
+      { color: 0xe0e0e0, nombre: "Cuarzo", valor: 20, emoji: "💎" },
+      { color: 0x9966cc, nombre: "Amatista", valor: 30, emoji: "💠" },
+      { color: 0x50c878, nombre: "Esmeralda", valor: 50, emoji: "💚" },
+      { color: 0xe0115f, nombre: "Rubí", valor: 80, emoji: "❤️" },
+      { color: 0x0f52ba, nombre: "Zafiro", valor: 100, emoji: "💙" },
+      { color: 0xb9f2ff, nombre: "Diamante", valor: 150, emoji: "💎" }
+    ];
+    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+    
+    const geometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+    const material = new THREE.MeshLambertMaterial({ 
+      color: tipo.color,
+      emissive: tipo.color,
+      emissiveIntensity: 0.6
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    
+    mesh.position.set((Math.random() - 0.5) * 80, 0.5, (Math.random() - 0.5) * 80);
+    mesh.userData = { tipo: 'piedra', datos: tipo, animacion: Math.random() * Math.PI * 2 };
+    scene.add(mesh);
+    coleccionables.push(mesh);
+  }
+}
+
+function crearEnemigo() {
+  if (!estado.corriendo || estado.juegoTerminado) return;
+  
+  const tipos = [
+    { color: 0x8b4513, nombre: "Cazador", vida: 3 * estado.nivelActual, daño: 10, emoji: "👨‍" },
+    { color: 0x696969, nombre: "Contaminador", vida: 2 * estado.nivelActual, daño: 8, emoji: "🏭" },
+    { color: 0x2f4f4f, nombre: "Talador", vida: 4 * estado.nivelActual, daño: 12, emoji: "🪓" },
+    { color: 0x8B0000, nombre: "Incendiario", vida: 5 * estado.nivelActual, daño: 15, emoji: "🔥" }
+  ];
+  
+  const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+  
+  const geometry = new THREE.BoxGeometry(1.5, 3, 1.5);
+  const material = new THREE.MeshLambertMaterial({ color: tipo.color });
+  const mesh = new THREE.Mesh(geometry, material);
+  
+  const angle = Math.random() * Math.PI * 2;
+  const radius = 40;
+  mesh.position.set(Math.cos(angle) * radius, 1.5, Math.sin(angle) * radius);
+  
+  mesh.userData = { 
+    tipo: 'enemigo', 
+    ...tipo, 
+    vidaMax: tipo.vida,
+    velocidad: 0.04 + (estado.nivelActual * 0.003)
+  };
+  
+  scene.add(mesh);
+  enemigos.push(mesh);
+}
+
+// ==================== ACTUALIZACIÓN DEL JUEGO ====================
+function actualizarJuego() {
+  if (!estado.corriendo || estado.juegoTerminado) return;
+  
+  // Actualizar tiempo
+  estado.tiempo -= 1/60;
+  if (estado.tiempo <= 0) {
+    gameOver();
+    return;
+  }
+  
+  // Movimiento del jugador
+  let velocidad = estado.velocidadBase;
+  if (teclas['Shift']) velocidad *= 1.8;
+  
+  let movido = false;
+  
+  if (teclas['ArrowUp'] || teclas['w'] || teclas['W']) {
+    jugador.position.z -= velocidad;
+    jugador.rotation.y = Math.PI;
+    movido = true;
+  }
+  if (teclas['ArrowDown'] || teclas['s'] || teclas['S']) {
+    jugador.position.z += velocidad;
+    jugador.rotation.y = 0;
+    movido = true;
+  }
+  if (teclas['ArrowLeft'] || teclas['a'] || teclas['A']) {
+    jugador.position.x -= velocidad;
+    jugador.rotation.y = -Math.PI / 2;
+    movido = true;
+  }
+  if (teclas['ArrowRight'] || teclas['d'] || teclas['D']) {
+    jugador.position.x += velocidad;
+    jugador.rotation.y = Math.PI / 2;
+    movido = true;
+  }
+  
+  // Salto
+  if ((teclas['t'] || teclas['T'] || teclas[' ']) && estado.enSuelo) {
+    estado.velocidadY = estado.velocidadSalto;
+    estado.enSuelo = false;
+  }
+  
+  // Gravedad
+  if (!estado.enSuelo) {
+    jugador.position.y += estado.velocidadY;
+    estado.velocidadY -= estado.gravedad;
+    
+    if (jugador.position.y <= 0) {
+      jugador.position.y = 0;
+      estado.enSuelo = true;
+      estado.velocidadY = 0;
+    }
+  }
+  
+  // Animación de piernas
+  if (movido && estado.enSuelo) {
+    const time = Date.now() * 0.01;
+    jugador.userData.legL.rotation.x = Math.sin(time) * 0.5;
+    jugador.userData.legR.rotation.x = Math.sin(time + Math.PI) * 0.5;
+  } else {
+    jugador.userData.legL.rotation.x = 0;
+    jugador.userData.legR.rotation.x = 0;
+  }
+  
+  // Límites
+  jugador.position.x = Math.max(-70, Math.min(70, jugador.position.x));
+  jugador.position.z = Math.max(-70, Math.min(70, jugador.position.z));
+  
+  // Cámara
+  camera.position.x = jugador.position.x;
+  camera.position.z = jugador.position.z + 25;
+  camera.lookAt(jugador.position);
+  
+  // Coleccionables
+  coleccionables.forEach(c => {
+    c.userData.animacion += 0.05;
+    c.position.y = 1 + Math.sin(c.userData.animacion) * 0.3;
+    c.rotation.y += 0.02;
+    
+    const dist = jugador.position.distanceTo(c.position);
+    if (dist < 2.5) {
+      const datos = c.userData.datos;
+      if (c.userData.tipo === 'orquidea') {
+        estado.orquideas++;
+        estado.puntos += datos.valor;
+        estado.progreso += datos.valor;
+      } else {
+        estado.piedras++;
+        estado.puntos += datos.valor;
+        estado.progreso += datos.valor;
+      }
+      scene.remove(c);
+      c.userData.recolectado = true;
+    }
+  });
+  
+  coleccionables = coleccionables.filter(c => !c.userData.recolectado);
+  
+  // Enemigos
+  enemigos.forEach((enemigo, index) => {
+    if (enemigo.userData.vida <= 0) {
+      scene.remove(enemigo);
+      enemigos.splice(index, 1);
+      estado.puntos += 50;
+      return;
+    }
+    
+    const direction = new THREE.Vector3();
+    direction.subVectors(jugador.position, enemigo.position).normalize();
+    enemigo.position.add(direction.multiplyScalar(enemigo.userData.velocidad));
+    enemigo.lookAt(jugador.position);
+    
+    const dist = jugador.position.distanceTo(enemigo.position);
+    if (dist < 2.5) {
+      estado.vida -= enemigo.userData.daño / 10;
+      enemigo.position.sub(direction.multiplyScalar(5));
+      
+      if (estado.vida <= 0) {
+        estado.vidas--;
+        estado.vida = 100;
+        if (estado.vidas <= 0) {
+          gameOver();
+        }
+      }
+    }
+  });
+  
+  // Obstáculos
+  obstaculos.forEach(obs => {
+    const dist = jugador.position.distanceTo(obs.position);
+    if (dist < 2) {
+      const direction = new THREE.Vector3();
+      direction.subVectors(jugador.position, obs.position).normalize();
+      jugador.position.add(direction.multiplyScalar(0.5));
+    }
+  });
+  
+  // Victoria
+  if (estado.progreso >= estado.meta * 10) {
+    nivelCompletado();
+  }
+  
+  actualizarHUD();
+}
+
+// ==================== TIENDA ====================
+function mostrarTienda() {
+  const modal = document.getElementById('modal');
+  const contenido = document.getElementById('modalContent');
+  
+  contenido.innerHTML = `
+    <h2 class="modal-title">🏪 TIENDA DE MINEROSO</h2>
+    
+    <div class="shop-section">
+      <div class="shop-title">💰 Tus Créditos</div>
+      <div class="credits-display">${estado.creditos} créditos</div>
+    </div>
+    
+    <div class="shop-section">
+      <div class="shop-title">🛒 Comprar Créditos</div>
+      <div class="credit-packages">
+        <div class="credit-package" onclick="comprarCreditos(50, 5)">
+          <div class="credit-amount">50 Créditos</div>
+          <div class="credit-price">S/ 5.00</div>
+        </div>
+        <div class="credit-package" onclick="comprarCreditos(120, 10)">
+          <div class="credit-amount">120 Créditos</div>
+          <div class="credit-price">S/ 10.00</div>
+        </div>
+      </div>
+      <p style="color: #90EE90; font-size: 0.9em;">* Simulación de compra - No se procesan pagos reales</p>
+    </div>
+    
+    <div class="shop-section">
+      <div class="shop-title">⚔️ Armas y Poderes</div>
+      <div class="weapons-grid">
+        ${ARMAS.map(arma => {
+          const poseida = estado.armasPoseidas.includes(arma.id);
+          const equipada = estado.armaEquipada === arma.id;
+          return `
+            <div class="weapon-card ${poseida ? 'owned' : ''} ${equipada ? 'equipped' : ''}">
+              <div class="weapon-icon">${arma.icono}</div>
+              <div class="weapon-name">${arma.nombre}</div>
+              <div class="weapon-stats">
+                Daño: ${arma.daño} | Velocidad: ${arma.velocidad}x
+              </div>
+              <div style="font-size: 0.85em; color: #ccc; margin: 10px 0;">
+                ${arma.descripcion}
+              </div>
+              ${!poseida ? `
+                <div class="weapon-price">${arma.precio} créditos</div>
+                <button class="btn-buy" onclick="comprarArma('${arma.id}')" ${estado.creditos < arma.precio ? 'disabled' : ''}>
+                  ${estado.creditos < arma.precio ? 'Sin créditos' : 'Comprar'}
+                </button>
+              ` : equipada ? `
+                <button class="btn-equipped">✓ Equipada</button>
+              ` : `
+                <button class="btn-equip" onclick="equiparArma('${arma.id}')">Equipar</button>
+              `}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+    
+    <button onclick="cerrarTiendaYContinuar()">▶️ Continuar al Nivel</button>
+  `;
+  
+  modal.classList.remove('hidden');
+}
+
+function comprarCreditos(cantidad, precio) {
+  if (confirm(`¿Deseas comprar ${cantidad} créditos por S/ ${precio.toFixed(2)}?\n\n* Esto es una simulación`)) {
+    estado.creditos += cantidad;
+    localStorage.setItem('mineroso_creditos', estado.creditos);
+    mostrarMensaje(`+${cantidad} créditos añadidos`);
+    mostrarTienda();
+  }
+}
+
+function comprarArma(armaId) {
+  const arma = ARMAS.find(a => a.id === armaId);
+  if (estado.creditos >= arma.precio) {
+    if (confirm(`¿Comprar ${arma.nombre} por ${arma.precio} créditos?`)) {
+      estado.creditos -= arma.precio;
+      estado.armasPoseidas.push(armaId);
+      localStorage.setItem('mineroso_creditos', estado.creditos);
+      localStorage.setItem('mineroso_armas', JSON.stringify(estado.armasPoseidas));
+      mostrarMensaje(`¡${arma.nombre} adquirida!`);
+      mostrarTienda();
+    }
+  }
+}
+
+function equiparArma(armaId) {
+  estado.armaEquipada = armaId;
+  const arma = ARMAS.find(a => a.id === armaId);
+  mostrarMensaje(`${arma.nombre} equipada`);
+  mostrarTienda();
+}
+
+function cerrarTiendaYContinuar() {
+  document.getElementById('modal').classList.add('hidden');
+  mostrarPreguntaNivel(estado.nivelActual);
+}
+
+// ==================== EVENTOS ====================
+function iniciarJuego() {
+  document.getElementById('modal').classList.add('hidden');
+  document.getElementById('record').textContent = estado.record;
+  document.getElementById('creditos').textContent = estado.creditos;
+  
+  init3D();
+  mostrarTienda();
+  render();
+}
+
+function mostrarPreguntaNivel(nivelIndex) {
+  if (nivelIndex >= 25) {
+    victoriaFinal();
+    return;
+  }
+  
+  const bancoNivel = BANCO_PREGUNTAS[nivelIndex];
+  const preguntaObj = bancoNivel[Math.floor(Math.random() * bancoNivel.length)];
+  
+  const modal = document.getElementById('modal');
+  const contenido = document.getElementById('modalContent');
+  
+  const tiempos = [120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240];
+  const metas = [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150];
+  
+  contenido.innerHTML = `
+    <h2 class="modal-title">🌲 Nivel ${nivelIndex + 1} - ${BIOMAS[nivelIndex].nombre}</h2>
+    <div class="question">
+      <strong style="color: #ffd700;">Pregunta:</strong><br><br>
+      ${preguntaObj.p}
+    </div>
+    <div class="answers">
+      ${preguntaObj.r.map((resp, i) => `
+        <button class="answer-btn" onclick="verificarRespuesta(${i}, ${preguntaObj.c}, ${nivelIndex})">
+          ${String.fromCharCode(65 + i)}. ${resp}
+        </button>
+      `).join('')}
+    </div>
+    <p style="margin-top: 15px; color: #90EE90;">
+      ❤️ Vidas: ${'❤️'.repeat(estado.vidas)} | ⏱️ ${tiempos[nivelIndex]}s | 🎯 ${metas[nivelIndex]}
+    </p>
+    ${estado.armaEquipada ? `<p style="color: #ffd700; margin-top: 10px;">⚔️ Arma equipada: ${ARMAS.find(a => a.id === estado.armaEquipada).nombre}</p>` : ''}
+  `;
+  
+  modal.classList.remove('hidden');
+}
+
+function verificarRespuesta(seleccionada, correcta, nivelIndex) {
+  if (seleccionada === correcta) {
+    // Respuesta correcta - INICIAR EL NIVEL INMEDIATAMENTE
+    iniciarNivel(nivelIndex);
+    document.getElementById('modal').classList.add('hidden');
+  } else {
+    // Respuesta incorrecta
+    estado.preguntasFalladas++;
+    estado.vidas--;
+    mostrarMensaje(`❌ Incorrecto\nVidas: ${'❤️'.repeat(estado.vidas)}`);
+    
+    if (estado.vidas <= 0) {
+      setTimeout(() => gameOver(), 2000);
+    } else {
+      setTimeout(() => mostrarPreguntaNivel(nivelIndex), 2000);
+    }
+  }
+}
+
+function nivelCompletado() {
+  estado.corriendo = false;
+  estado.puntos += 1000;
+  estado.creditos += 20;
+  localStorage.setItem('mineroso_creditos', estado.creditos);
+  estado.nivelActual++; // ← CORRECCIÓN: Incrementar el nivel
+  mostrarMensaje(`🎉 ¡Nivel ${estado.nivelActual} Completado!\n+1000 Puntos +20 Créditos`);
+  
+  setTimeout(() => mostrarTienda(), 3000);
+}
+
+function victoriaFinal() {
+  estado.juegoTerminado = true;
+  if (estado.puntos > estado.record) {
+    estado.record = estado.puntos;
+    localStorage.setItem('mineroso_record', estado.record);
+  }
+  
+  const modal = document.getElementById('modal');
+  const contenido = document.getElementById('modalContent');
+  
+  contenido.innerHTML = `
+    <h2 class="modal-title">🏆 ¡VICTORIA TOTAL!</h2>
+    <p style="font-size: 1.3em; margin: 20px 0;">¡Salvaste todos los biomas!</p>
+    <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 10px; margin: 20px 0;">
+      <p>🌸 Orquídeas: ${estado.orquideas}</p>
+      <p>💎 Piedras: ${estado.piedras}</p>
+      <p style="font-size: 1.5em; color: #ffd700; margin-top: 15px;">Puntos: ${estado.puntos}</p>
+      <p style="font-size: 1.3em; color: #ffd700;">💰 Créditos: ${estado.creditos}</p>
+      <p style="color: #ff6347; font-size: 1.3em;">🎊 ¡NUEVO RÉCORD! 🎊</p>
+    </div>
+    <button onclick="location.reload()">🔄 Jugar de Nuevo</button>
+  `;
+  
+  modal.classList.remove('hidden');
+}
+
+function gameOver() {
+  estado.corriendo = false;
+  estado.juegoTerminado = true;
+  
+  const modal = document.getElementById('modal');
+  const contenido = document.getElementById('modalContent');
+  
+  contenido.innerHTML = `
+    <h2 class="modal-title">💀 Game Over</h2>
+    <p style="font-size: 1.3em; margin: 20px 0;">Nivel: ${estado.nivelActual + 1}/25</p>
+    <p style="font-size: 1.3em; color: #ffd700;">Puntos: ${estado.puntos}</p>
+    <p style="font-size: 1.3em; color: #ffd700;">Créditos: ${estado.creditos}</p>
+    <button onclick="location.reload()">🔄 Reintentar</button>
+  `;
+  
+  modal.classList.remove('hidden');
+}
+
+function mostrarMensaje(texto) {
+  const msg = document.getElementById('mensaje');
+  msg.textContent = texto;
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2000);
+}
+
+function actualizarHUD() {
+  document.getElementById('nivel').textContent = `${estado.nivelActual + 1}/25`;
+  document.getElementById('puntos').textContent = estado.puntos;
+  document.getElementById('tiempo').textContent = Math.ceil(estado.tiempo);
+  document.getElementById('meta').textContent = `${Math.floor(estado.progreso/10)}/${estado.meta}`;
+  document.getElementById('vidas').textContent = '❤️'.repeat(estado.vidas);
+  document.getElementById('creditos').textContent = estado.creditos;
+  document.getElementById('orquideas').textContent = estado.orquideas;
+  document.getElementById('piedras').textContent = estado.piedras;
+  document.getElementById('poder').textContent = estado.poder;
+  document.getElementById('bioma').textContent = estado.biomaActual;
+  document.getElementById('vidaBar').style.width = `${Math.max(0, estado.vida)}%`;
+}
+
+function render() {
+  requestAnimationFrame(render);
+  if (estado.corriendo && !estado.juegoTerminado) {
+    actualizarJuego();
+  }
+  renderer.render(scene, camera);
+}
+
+document.addEventListener('keydown', e => {
+  teclas[e.key] = true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) {
+    e.preventDefault();
+  }
+});
+
+document.addEventListener('keyup', e => {
+  teclas[e.key] = false;
+});
+
+document.getElementById('record').textContent = estado.record;
+document.getElementById('creditos').textContent = estado.creditos;
+</script>
+</body>
+</html>
